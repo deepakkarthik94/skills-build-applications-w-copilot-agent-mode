@@ -42,7 +42,7 @@ Record your plan here before editing code.
 
 Record the commands you run and what each failure means.
 
-- Data-tier command: `npm run test:data --prefix octofit-tracker/backend`. A failure points to model validation, defaults/relationships, or seed idempotence/data preservation. Current baseline: 4 model-contract failures; the seed test passes.
+- Data-tier command: `npm run test:data --prefix octofit-tracker/backend`. A failure points to model validation, defaults/relationships, or seed idempotence/data preservation. Current result: all 5 data-contract tests pass.
 - API command: `npm run test:api --prefix octofit-tracker/backend`. A failure points to route/service behavior or the API-to-model contract: request validation, creation/listing, leaderboard aggregation/ranking, or workout matching/reasons. Current baseline: all 4 API contract tests fail.
 - Frontend command: `npm test --prefix octofit-tracker/frontend`. A failure points to API-client integration, route rendering, or accessible loading/empty/error states. Current baseline: all 15 presentation contract tests fail.
 - Backend build command: `npm run build --prefix octofit-tracker/backend`. A failure indicates a TypeScript compile/type error in the backend. Current baseline: passes.
