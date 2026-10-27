@@ -30,20 +30,23 @@ OctoFit Tracker is a three-tier application for a school fitness program. The st
 
 Record your plan here before editing code.
 
-- Presentation tier decision:
-- Logic tier decision:
-- Data tier decision:
-- Activity tracking approach:
-- Team management approach:
-- Leaderboard approach:
-- Workout suggestions approach:
+- Presentation tier decision: Keep route-level UI in React components and route all HTTP calls through the shared API client. Components own loading, empty, success, and accessible error states; business rules and persistence stay out of the presentation tier.
+- Logic tier decision: Keep HTTP parsing/status codes in Express routes and put capability behavior in backend services. Validate request shape and ObjectId format before database lookups, check referenced records exist, and return deliberate 4xx responses instead of leaking Mongoose cast errors as 500s.
+- Data tier decision: Use Mongoose models as the persistence boundary. Require the documented identity, relationship, and workout fields; default team members to an empty array; store activity references, minutes, points, and occurrence time. Keep seed data representative and idempotent without deleting unrelated records.
+- Activity tracking approach: Accept `userId`, `teamId`, `type`, and positive `minutes`; validate both IDs and confirm the user and team exist. Store their references, calculate points as one point per minute, and set `occurredAt` on the server. Return the created activity and list persisted activities from the API.
+- Team management approach: Reject a missing or blank name with `400`; persist and return the submitted name and mascot. Accept member IDs as references, default omitted members to an empty list, and expose members when listing teams.
+- Leaderboard approach: Sum persisted activity points per team, include teams with no activity at zero points, sort descending by total, and assign ranks starting at 1. Do not duplicate or persist derived totals.
+- Workout suggestions approach: Find the user by email and return a deliberate 4xx when no user matches. Rank available workouts so the first focus matches the user's fitness goal, falling back to recent activity when needed, and include a concise reason tied to that goal or activity.
 
 ## Test plan
 
 Record the commands you run and what each failure means.
 
-- Data-tier command: `npm run test:data --prefix octofit-tracker/backend`
-- API command: `npm run test:api --prefix octofit-tracker/backend`
-- Frontend command: `npm test --prefix octofit-tracker/frontend`
-- Backend build command: `npm run build --prefix octofit-tracker/backend`
-- Frontend build command: `npm run build --prefix octofit-tracker/frontend`
+- Data-tier command: `npm run test:data --prefix octofit-tracker/backend`. A failure points to model validation, defaults/relationships, or seed idempotence/data preservation. Current result: all 5 data-contract tests pass.
+- API command: `npm run test:api --prefix octofit-tracker/backend`. A failure points to route/service behavior or the API-to-model contract: request validation, creation/listing, leaderboard aggregation/ranking, or workout matching/reasons. Current baseline: all 4 API contract tests fail.
+- Frontend command: `npm test --prefix octofit-tracker/frontend`. A failure points to API-client integration, route rendering, or accessible loading/empty/error states. Current baseline: all 15 presentation contract tests fail.
+- Backend build command: `npm run build --prefix octofit-tracker/backend`. A failure indicates a TypeScript compile/type error in the backend. Current baseline: passes.
+- Frontend build command: `npm run build --prefix octofit-tracker/frontend`. A failure indicates a TypeScript or Vite production-build error. Current baseline: passes.
+- Exercise metadata command: `node --test tests/exercise-validation.test.mjs`. This checks the exercise scaffolding and grading/workflow contracts, not OctoFit runtime behavior. Current baseline: 4 failures trace to the README Copy Exercise badge owner/name mismatch; treat separately from tier tests.
+
+Run the data-tier tests first, then API tests, then frontend tests; this follows the dependency direction and localizes contract breaks. Run both builds after implementation changes as compilation and production-bundle gates.
